@@ -5,6 +5,11 @@
 #include "updator_handler.cpp"
 
 class PrimeAnnouncer : public RC::CppUserModBase {
+private:
+    int last_tick_attempt = 0;
+    int current_tick = 0;
+    const int tick_delay = 1200;
+
 public:
     PrimeAnnouncer() : CppUserModBase()
     {
@@ -14,8 +19,14 @@ public:
         ModAuthors = STR("Shiza");
     }
 
-    auto on_ui_init() -> void override {
+    auto on_unreal_init() -> void override {
         PrimeChecker::Initialize();
+    }
+
+    auto on_update() -> void override {
+        if (++current_tick < last_tick_attempt + tick_delay) return;
+        last_tick_attempt = current_tick;
+        PrimeChecker::Fire();
     }
 };
 

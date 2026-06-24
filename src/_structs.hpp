@@ -1,6 +1,9 @@
 #pragma once
 
+#include <Unreal/AActor.hpp>
 #include <Unreal/FText.hpp>
+#include <Unreal/AGameModeBase.hpp>
+#include <Unreal/PropertyMacros.hpp>
 
 struct FEligiblePrimeElder
 {
@@ -17,8 +20,17 @@ struct FEligiblePrimeElder
     bool bIsEligiblePrime;
 };
 
-struct FSetEligiblePrimeElderDataParams {
-    FEligiblePrimeElder NewData;
+class AController : public RC::Unreal::AActor {};
+class APlayerController : public AController {};
+class ATIPlayerController : public APlayerController {};
+
+class ATIDinosaurBase : public RC::Unreal::AActor {};
+
+struct ATIGameModeBase : public RC::Unreal::AGameModeBase {};
+
+struct CachedDinoHolder {
+    ATIDinosaurBase* Dino;
+    FEligiblePrimeElder EligiblePrimeData;
 };
 
 struct FClientShowNotificationParams {
