@@ -23,12 +23,12 @@ namespace PrimeChecker {
 
   static UClass* DinoClass = nullptr;
   static FProperty* DinoPrimeDataProp = nullptr;
-  static FProperty* DinoIdPrefixProp = nullptr;
+  static FProperty* DinoIDProp = nullptr;
   static FProperty* DinoPlayerControllerProp = nullptr;
 
   static UFunction* ClientNotifyFunc = nullptr;
 
-  static TMap<FString, FEligiblePrimeElder> Cached;
+  static TMap<int32, FEligiblePrimeElder> Cached;
 
   auto NotifyPrimeConditionDiff(ATIDinosaurBase* Dino, ATIPlayerController* PC, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
     using namespace RC::Unreal;
@@ -49,9 +49,8 @@ namespace PrimeChecker {
     };
 
     for (const auto& Field : Fields) {
-      bool OldVal = Old.*Field.Member;
       bool NewVal = New.*Field.Member;
-      if (OldVal == NewVal) continue;
+      if (Old.*Field.Member == NewVal) continue;
 
       auto MessageStr = fmt::format(STR("Your prime task status changed [{}: {}]"), Field.Name, NewVal);
       FClientShowNotificationParams Notif{FText(MessageStr)};
@@ -64,24 +63,26 @@ namespace PrimeChecker {
     auto* GameMode = UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C"));
     if (!GameMode) return;
 
-    static TMap<FString, FEligiblePrimeElder> NewCached;
+    TMap<int32, FEligiblePrimeElder> NewCached;
     TArray<ATIDinosaurBase*>* ActiveDinos = GameModeAllPlayers->ContainerPtrToValuePtr<TArray<ATIDinosaurBase*>>(GameMode);
     for (ATIDinosaurBase* Dino : *ActiveDinos) {
-      FString IdPrefix = *DinoIdPrefixProp->ContainerPtrToValuePtr<FString>(Dino);
+      if (!Dino || !Dino->IsA(DinoClass)) continue;
+
+      int32 DinoId = *DinoIDProp->ContainerPtrToValuePtr<int32>(Dino);
       FEligiblePrimeElder& NewData = *DinoPrimeDataProp->ContainerPtrToValuePtr<FEligiblePrimeElder>(Dino);
-      if (!Cached.Contains(IdPrefix)) {
-        NewCached.Add(IdPrefix, NewData);
+      if (!Cached.Contains(DinoId)) {
+        NewCached.Add(DinoId, NewData);
         continue;
       }
       ATIPlayerController* PlayerControllerPtr = *DinoPlayerControllerProp->ContainerPtrToValuePtr<ATIPlayerController*>(Dino);
       if (!PlayerControllerPtr) continue;
 
-      FEligiblePrimeElder OldData = *Cached.Find(IdPrefix);
-      NewCached.Add(IdPrefix, OldData);
+      FEligiblePrimeElder OldData = *Cached.Find(DinoId);
+      NewCached.Add(DinoId, OldData);
       if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
 
       NotifyPrimeConditionDiff(Dino, PlayerControllerPtr, OldData, NewData);
-      NewCached.Add(IdPrefix, NewData);
+      NewCached.Add(DinoId, NewData);
     }
     Cached = NewCached;
   }
@@ -92,7 +93,7 @@ namespace PrimeChecker {
 
     DinoClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIDinosaurBase"));
     DinoPrimeDataProp = DinoClass->GetPropertyByNameInChain(STR("EligiblePrimeElderData"));
-    DinoIdPrefixProp = DinoClass->GetPropertyByNameInChain(STR("IdPrefix"));
+    DinoIDProp = DinoClass->GetPropertyByNameInChain(STR("ID"));
     DinoPlayerControllerProp = DinoClass->GetPropertyByNameInChain(STR("PlayerController"));
 
     ClientNotifyFunc = UObjectGlobals::StaticFindObject<UFunction*>(nullptr, nullptr, STR("/Script/TheIsle.TIPlayerController:ClientShowNotification"));
