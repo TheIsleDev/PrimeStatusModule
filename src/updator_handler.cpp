@@ -12,6 +12,7 @@
 #include <Unreal/CoreUObject/UObject/UnrealType.hpp>
 #include <Unreal/Core/Containers/ContainerAllocationPolicies.hpp>
 
+#include "Containers/FString.hpp"
 #include "_structs.hpp"
 
 using namespace RC::Unreal;
@@ -22,14 +23,12 @@ namespace PrimeChecker {
 
   static UClass* DinoClass = nullptr;
   static FProperty* DinoPrimeDataProp = nullptr;
+  static FProperty* DinoIdPrefixProp = nullptr;
   static FProperty* DinoPlayerControllerProp = nullptr;
 
   static UFunction* ClientNotifyFunc = nullptr;
 
-  static UFunction* PossesPawnFunc = nullptr;
-  static FProperty* FuncParamProp = nullptr;
-
-  static std::vector<CachedDinoHolder> Cached{};
+  static TMap<FString, FEligiblePrimeElder> Cached;
 
   auto NotifyPrimeConditionDiff(ATIDinosaurBase* Dino, ATIPlayerController* PC, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
     using namespace RC::Unreal;
@@ -61,49 +60,30 @@ namespace PrimeChecker {
     }
   }
 
-  auto HandleCallBack(UnrealScriptFunctionCallableContext& FuncContext) -> void {
-    Output::send<LogLevel::Error>(STR("HOOK FIRED"));
-    ATIDinosaurBase* Dino = *FuncParamProp->ContainerPtrToValuePtr<ATIDinosaurBase*>(FuncContext.TheStack.Locals());
-    FEligiblePrimeElder* Data = DinoPrimeDataProp->ContainerPtrToValuePtr<FEligiblePrimeElder>(Dino);
-    Cached.push_back(CachedDinoHolder{Dino, *Data});
-  }
-
-  auto try_find_func() -> void {
-    PossesPawnFunc = UObjectGlobals::StaticFindObject<UFunction*>(nullptr, nullptr, STR("/Game/TheIsle/Core/Player/BP_PlayerController.BP_PlayerController_C:ReceivePossess"));
-    if (!PossesPawnFunc) return;
-    FuncParamProp = PossesPawnFunc->GetPropertyByNameInChain(STR("PossessedPawn"));
-    PossesPawnFunc->RegisterPreHook(
-      [](UnrealScriptFunctionCallableContext& FuncContext, void*) -> void {
-        HandleCallBack(FuncContext);
-      },
-      nullptr
-    );
-  }
-
   auto Fire() -> void {
-    if (!PossesPawnFunc) try_find_func();
-    for (size_t i = Cached.size(); i-- > 0; ) {
-      CachedDinoHolder& Holder = Cached[i];
-      ATIDinosaurBase* Dino = Holder.Dino;
-      if (!Dino || !Dino->IsA(DinoClass)) {
-        Cached.erase(Cached.begin() + i);
+    auto* GameMode = UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C"));
+    if (!GameMode) return;
+
+    static TMap<FString, FEligiblePrimeElder> NewCached;
+    TArray<ATIDinosaurBase*>* ActiveDinos = GameModeAllPlayers->ContainerPtrToValuePtr<TArray<ATIDinosaurBase*>>(GameMode);
+    for (ATIDinosaurBase* Dino : *ActiveDinos) {
+      FString IdPrefix = *DinoIdPrefixProp->ContainerPtrToValuePtr<FString>(Dino);
+      FEligiblePrimeElder& NewData = *DinoPrimeDataProp->ContainerPtrToValuePtr<FEligiblePrimeElder>(Dino);
+      if (!Cached.Contains(IdPrefix)) {
+        NewCached.Add(IdPrefix, NewData);
         continue;
       }
-
-      FEligiblePrimeElder* LiveDataPtr = DinoPrimeDataProp->ContainerPtrToValuePtr<FEligiblePrimeElder>(Dino);
-      const FEligiblePrimeElder OldData = Holder.EligiblePrimeData;
-      const FEligiblePrimeElder& NewData = *LiveDataPtr;
-      Output::send<LogLevel::Error>(STR("FIRED 3"));
- 
-      if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
- 
       ATIPlayerController* PlayerControllerPtr = *DinoPlayerControllerProp->ContainerPtrToValuePtr<ATIPlayerController*>(Dino);
-
       if (!PlayerControllerPtr) continue;
 
+      FEligiblePrimeElder OldData = *Cached.Find(IdPrefix);
+      NewCached.Add(IdPrefix, OldData);
+      if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
+
       NotifyPrimeConditionDiff(Dino, PlayerControllerPtr, OldData, NewData);
-      Holder.EligiblePrimeData = NewData;
+      NewCached.Add(IdPrefix, NewData);
     }
+    Cached = NewCached;
   }
 
   auto Initialize() -> void {
@@ -112,10 +92,9 @@ namespace PrimeChecker {
 
     DinoClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIDinosaurBase"));
     DinoPrimeDataProp = DinoClass->GetPropertyByNameInChain(STR("EligiblePrimeElderData"));
+    DinoIdPrefixProp = DinoClass->GetPropertyByNameInChain(STR("IdPrefix"));
     DinoPlayerControllerProp = DinoClass->GetPropertyByNameInChain(STR("PlayerController"));
 
     ClientNotifyFunc = UObjectGlobals::StaticFindObject<UFunction*>(nullptr, nullptr, STR("/Script/TheIsle.TIPlayerController:ClientShowNotification"));
-
-    try_find_func();
   }
 }

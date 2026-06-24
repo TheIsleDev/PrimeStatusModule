@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FWeakObjectPtr.hpp"
 #include <Unreal/AActor.hpp>
 #include <Unreal/FText.hpp>
 #include <Unreal/AGameModeBase.hpp>
@@ -27,11 +28,6 @@ class ATIPlayerController : public APlayerController {};
 class ATIDinosaurBase : public RC::Unreal::AActor {};
 
 struct ATIGameModeBase : public RC::Unreal::AGameModeBase {};
-
-struct CachedDinoHolder {
-    ATIDinosaurBase* Dino;
-    FEligiblePrimeElder EligiblePrimeData;
-};
 
 struct FClientShowNotificationParams {
     RC::Unreal::FText Message;
