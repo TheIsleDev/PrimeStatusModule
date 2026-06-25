@@ -13,7 +13,7 @@
 #include <Unreal/Core/Containers/ContainerAllocationPolicies.hpp>
 
 #include "Containers/FString.hpp"
-#include "_structs.hpp"
+#include "Structs/TheIsleStructs.hpp"
 
 using namespace RC::Unreal;
 
@@ -28,24 +28,29 @@ namespace PrimeChecker {
 
   static UFunction* ClientNotifyFunc = nullptr;
 
-  static TMap<int32, FEligiblePrimeElder> Cached;
+  static TMap<int32, IsleStructs::FEligiblePrimeElder> Cached;
 
-  auto NotifyPrimeConditionDiff(ATIDinosaurBase* Dino, ATIPlayerController* PC, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
+  auto NotifyPrimeConditionDiff(
+    IsleStructs::ATIDinosaurBase* Dino,
+    IsleStructs::ATIPlayerController* PC,
+    const IsleStructs::FEligiblePrimeElder& Old,
+    const IsleStructs::FEligiblePrimeElder& New
+  ) -> void {
     using namespace RC::Unreal;
 
-    struct ConditionField { bool FEligiblePrimeElder::* Member; const wchar_t* Name; };
+    struct ConditionField { bool IsleStructs::FEligiblePrimeElder::* Member; const wchar_t* Name; };
     static const ConditionField Fields[] = {
-      {&FEligiblePrimeElder::bPrimeCondition1, STR("Condition1")},
-      {&FEligiblePrimeElder::bPrimeCondition2, STR("Condition2")},
-      {&FEligiblePrimeElder::bPrimeCondition3, STR("Condition3")},
-      {&FEligiblePrimeElder::bPrimeCondition4, STR("Condition4")},
-      {&FEligiblePrimeElder::bPrimeCondition5, STR("Condition5")},
-      {&FEligiblePrimeElder::bPrimeCondition6, STR("Condition6")},
-      {&FEligiblePrimeElder::bPrimeCondition7, STR("Condition7")},
-      {&FEligiblePrimeElder::bPrimeCondition8, STR("Condition8")},
-      {&FEligiblePrimeElder::bPrimeCondition9, STR("Condition9")},
-      {&FEligiblePrimeElder::bPrimeCondition10, STR("Condition10")},
-      {&FEligiblePrimeElder::bIsEligiblePrime, STR("IsEligiblePrime")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition1, STR("Condition1")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition2, STR("Condition2")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition3, STR("Condition3")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition4, STR("Condition4")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition5, STR("Condition5")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition6, STR("Condition6")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition7, STR("Condition7")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition8, STR("Condition8")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition9, STR("Condition9")},
+      {&IsleStructs::FEligiblePrimeElder::bPrimeCondition10, STR("Condition10")},
+      {&IsleStructs::FEligiblePrimeElder::bIsEligiblePrime, STR("IsEligiblePrime")},
     };
 
     for (const auto& Field : Fields) {
@@ -53,7 +58,7 @@ namespace PrimeChecker {
       if (Old.*Field.Member == NewVal) continue;
 
       auto MessageStr = fmt::format(STR("Your prime task status changed [{}: {}]"), Field.Name, NewVal);
-      FClientShowNotificationParams Notif{FText(MessageStr)};
+      IsleStructs::FClientShowNotificationParams Notif{FText(MessageStr)};
 
       PC->ProcessEvent(ClientNotifyFunc, &Notif);
     }
@@ -63,23 +68,23 @@ namespace PrimeChecker {
     auto* GameMode = UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C"));
     if (!GameMode) return;
 
-    TMap<int32, FEligiblePrimeElder> NewCached;
-    TArray<ATIDinosaurBase*>* ActiveDinos = GameModeAllPlayers->ContainerPtrToValuePtr<TArray<ATIDinosaurBase*>>(GameMode);
-    for (ATIDinosaurBase* Dino : *ActiveDinos) {
+    TMap<int32, IsleStructs::FEligiblePrimeElder> NewCached;
+    TArray<IsleStructs::ATIDinosaurBase*>* ActiveDinos = GameModeAllPlayers->ContainerPtrToValuePtr<TArray<IsleStructs::ATIDinosaurBase*>>(GameMode);
+    for (IsleStructs::ATIDinosaurBase* Dino : *ActiveDinos) {
       if (!Dino || !Dino->IsA(DinoClass)) continue;
 
       int32 DinoId = *DinoIDProp->ContainerPtrToValuePtr<int32>(Dino);
-      FEligiblePrimeElder& NewData = *DinoPrimeDataProp->ContainerPtrToValuePtr<FEligiblePrimeElder>(Dino);
+      IsleStructs::FEligiblePrimeElder& NewData = *DinoPrimeDataProp->ContainerPtrToValuePtr<IsleStructs::FEligiblePrimeElder>(Dino);
       if (!Cached.Contains(DinoId)) {
         NewCached.Add(DinoId, NewData);
         continue;
       }
-      ATIPlayerController* PlayerControllerPtr = *DinoPlayerControllerProp->ContainerPtrToValuePtr<ATIPlayerController*>(Dino);
+      IsleStructs::ATIPlayerController* PlayerControllerPtr = *DinoPlayerControllerProp->ContainerPtrToValuePtr<IsleStructs::ATIPlayerController*>(Dino);
       if (!PlayerControllerPtr) continue;
 
-      FEligiblePrimeElder OldData = *Cached.Find(DinoId);
+      IsleStructs::FEligiblePrimeElder OldData = *Cached.Find(DinoId);
       NewCached.Add(DinoId, OldData);
-      if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
+      if (!std::memcmp(&OldData, &NewData, sizeof(IsleStructs::FEligiblePrimeElder))) continue;
 
       NotifyPrimeConditionDiff(Dino, PlayerControllerPtr, OldData, NewData);
       NewCached.Add(DinoId, NewData);
