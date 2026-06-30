@@ -2,7 +2,7 @@
 
 #include <Mod/CppUserModBase.hpp>
 
-#include "updator_handler.cpp"
+#include "handler.cpp"
 
 class PrimeAnnouncer : public RC::CppUserModBase {
 private:
