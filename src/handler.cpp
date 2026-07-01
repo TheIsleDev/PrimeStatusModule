@@ -1,6 +1,3 @@
-#pragma once
-
-
 #include <SDKGenerator/UEHeaderGenerator.hpp>
 
 #include <String/StringType.hpp>
@@ -13,14 +10,14 @@
 #include "Containers/FString.hpp"
 #include "Structs/TheIsleStructs.hpp"
 
-using namespace RC::Unreal;
-
 struct ConditionField {
 	bool IsleStructs::FEligiblePrimeElder::* Member;
 	const wchar_t* Name;// StringType maybe, I made it when didn't realized I can use it.
 };
 
 namespace PrimeStatusModule {
+	using namespace RC::Unreal;
+
 	static UClass* GameModeBaseClass = nullptr;
 	static FProperty* GameModeAllPlayers = nullptr;
 

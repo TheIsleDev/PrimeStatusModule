@@ -1,4 +1,4 @@
-set(TARGET PrimeAnnouncer)
+set(TARGET PrimeStatus)
 project(${TARGET})
 
 add_library(${TARGET} SHARED
