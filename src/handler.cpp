@@ -15,7 +15,12 @@
 
 using namespace RC::Unreal;
 
-namespace PrimeChecker {
+struct ConditionField {
+	bool IsleStructs::FEligiblePrimeElder::* Member;
+	const wchar_t* Name;// StringType maybe, I made it when didn't realized I can use it.
+};
+
+namespace PrimeStatusModule {
 	static UClass* GameModeBaseClass = nullptr;
 	static FProperty* GameModeAllPlayers = nullptr;
 
@@ -26,12 +31,6 @@ namespace PrimeChecker {
 
 	static UFunction* ClientNotifyFunc = nullptr;
 
-	static TMap<int32, IsleStructs::FEligiblePrimeElder> Cached;
-
-	struct ConditionField {
-		bool IsleStructs::FEligiblePrimeElder::* Member;
-		const wchar_t* Name;
-	};
 	static const ConditionField Fields[] = {
 		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition1, STR("Visit a Sanctuary")},
 		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition2, STR("Get Nested In")},
@@ -45,6 +44,8 @@ namespace PrimeChecker {
 		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition10, STR("Be a Hypsi, Troodon, Beipi, Dryo or Deino.")},
 		{&IsleStructs::FEligiblePrimeElder::bIsEligiblePrime, STR("Prime Eligibility")},
 	};
+
+	static TMap<int32, IsleStructs::FEligiblePrimeElder> Cached;
 
 	auto NotifyPrimeConditionDiff(
 		IsleStructs::ATIDinosaurBase* Dino,
