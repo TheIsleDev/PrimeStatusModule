@@ -6,9 +6,8 @@
 
 class PrimeStatus : public RC::CppUserModBase {
 private:
-	int last_tick_attempt = 0;
-	int current_tick = 0;
-	const int tick_delay = 1200;
+	int TicksFired{0};
+	static constexpr int PerTicksFired{600};// 120 pre sec, 30 game ticks
 
 public:
 	PrimeStatus() : CppUserModBase() {
@@ -19,14 +18,15 @@ public:
 	}
 
 	auto on_unreal_init() -> void override {
-		PrimeStatusModule::Initialize();
+		PrimeStatusComponent::Initialize();
 	}
 
 	// Maybe I should do on gametick it or even better, intrusive game exe edit, so I won't even have to do on tick and just wait for calls on updates via callback
 	auto on_update() -> void override {
-		if (++current_tick < last_tick_attempt + tick_delay) return;
-		last_tick_attempt = current_tick;
-		PrimeStatusModule::Fire();
+		if (++TicksFired < PerTicksFired) return;
+		TicksFired = 0;
+
+		PrimeStatusComponent::Fire();
 	}
 };
 
