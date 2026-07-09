@@ -1,61 +1,45 @@
+#include "FText.hpp"
 #include <SDKGenerator/UEHeaderGenerator.hpp>
 
-#include <String/StringType.hpp>
 #include <Unreal/AActor.hpp>
 #include <Unreal/UObject.hpp>
+#include <Unreal/UObjectArray.hpp>
 #include <Unreal/UObjectGlobals.hpp>
 #include <Unreal/CoreUObject/UObject/UnrealType.hpp>
 #include <Unreal/Core/Containers/ContainerAllocationPolicies.hpp>
 
-#include "Containers/FString.hpp"
-#include "Structs/TheIsleStructs.hpp"
-
-struct ConditionField {
-	bool IsleStructs::FEligiblePrimeElder::* Member;
-	const wchar_t* Name;// StringType maybe, I made it when didn't realized I can use it.
-};
+#include <Reflection/_include_custom.hpp>
 
 namespace PrimeStatusComponent {
 	using namespace RC::Unreal;
 
-	static UClass* GameModeBaseClass{};
-	static FProperty* GameModeAllPlayers{};
-
-	static UClass* PlayerControllerBaseClass{};
-	static FProperty* PlayerControllerPawn{};
-
-	static UClass* DinoClass{};
-	static FProperty* DinoPrimeDataProp{};
-	static FProperty* DinoIDProp{};
-
-	static UFunction* ClientNotifyFunc{};
-
-	static UObject* GameMode{};
-
-	static const ConditionField Fields[] = {
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition1, STR("Visit a Sanctuary")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition2, STR("Get Nested In")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition3, STR("Get Perfect Diet")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition4, STR("Visit Mass Migration Zone")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition5, STR("Visit 2 Migration Zones")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition6, STR("Visit 4 Patrol Zones")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition7, STR("Never be infertile")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition8, STR("Never get muscle spasms")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition9, STR("Raise children to subadult")},
-		{&IsleStructs::FEligiblePrimeElder::bPrimeCondition10, STR("Be a Hypsi, Troodon, Beipi, Dryo or Deino.")},
-		{&IsleStructs::FEligiblePrimeElder::bIsEligiblePrime, STR("Prime Eligibility")},
+	struct ConditionField {
+		bool FEligiblePrimeElder::* Member;
+		const wchar_t* Name;// StringType maybe, I made it when didn't realized I can use it.
 	};
 
-	auto NotifyPrimeConditionDiff(
-		IsleStructs::ATIDinosaurBase* Dino,
-		IsleStructs::ATIPlayerController* PC,
-		const IsleStructs::FEligiblePrimeElder& Old,
-		const IsleStructs::FEligiblePrimeElder& New
-	) -> void {
+	static UClass* DinoClass{};
+	static ATIGameModeBase* GameMode{};
+
+	static const ConditionField Fields[] = {
+		{&FEligiblePrimeElder::bPrimeCondition1, STR("Visit a Sanctuary")},
+		{&FEligiblePrimeElder::bPrimeCondition2, STR("Get Nested In")},
+		{&FEligiblePrimeElder::bPrimeCondition3, STR("Get Perfect Diet")},
+		{&FEligiblePrimeElder::bPrimeCondition4, STR("Visit Mass Migration Zone")},
+		{&FEligiblePrimeElder::bPrimeCondition5, STR("Visit 2 Migration Zones")},
+		{&FEligiblePrimeElder::bPrimeCondition6, STR("Visit 4 Patrol Zones")},
+		{&FEligiblePrimeElder::bPrimeCondition7, STR("Never be infertile")},
+		{&FEligiblePrimeElder::bPrimeCondition8, STR("Never get muscle spasms")},
+		{&FEligiblePrimeElder::bPrimeCondition9, STR("Raise children to subadult")},
+		{&FEligiblePrimeElder::bPrimeCondition10, STR("Be a Hypsi, Troodon, Beipi, Dryo or Deino.")},
+		{&FEligiblePrimeElder::bIsEligiblePrime, STR("Prime Eligibility")},
+	};
+
+	auto NotifyPrimeConditionDiff(ATIDinosaurBase* Dino, ATIPlayerController* Player, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
 		using namespace RC::Unreal;
 
 		int CompletedTasks{0};
-		StringType ChangeAnnounce = STR("");
+		StringType ChangeAnnounce;
 		for (const auto& Field : Fields) {
 			bool OldVal = Old.*Field.Member;
 			bool NewVal = New.*Field.Member;
@@ -65,35 +49,34 @@ namespace PrimeStatusComponent {
 		}
 
 		StringType MessageStr = fmt::format(STR("Prime Tasks [{}/5] {}"), CompletedTasks, ChangeAnnounce);
-		IsleStructs::FClientShowNotificationParams Notif{FText(MessageStr)};
-		PC->ProcessEvent(ClientNotifyFunc, &Notif);
+		Player->ClientShowNotification(FText(MessageStr));
 	}
 
-	static TMap<int32, IsleStructs::FEligiblePrimeElder> Cached;
+	static TMap<int32, FEligiblePrimeElder> Cached;
 
 	auto Fire() -> void {
 		if (!GameMode) {
-			GameMode = UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C"));
+			GameMode = static_cast<ATIGameModeBase*>(UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C")));
 			if(!GameMode) return;
 		}
 
-		TMap<int32, IsleStructs::FEligiblePrimeElder> NewCached;
-		TSet<IsleStructs::ATIPlayerController*>* ActivePlayers = GameModeAllPlayers->ContainerPtrToValuePtr<TSet<IsleStructs::ATIPlayerController*>>(GameMode);
-		for (IsleStructs::ATIPlayerController* Player : *ActivePlayers) {
-			IsleStructs::APawn* Pawn = *PlayerControllerPawn->ContainerPtrToValuePtr<IsleStructs::APawn*>(Player);;
+		TMap<int32, FEligiblePrimeElder> NewCached;
+		TSet<ATIPlayerController*> ActivePlayers = GameMode->GetAllPlayerControllers();
+		for (ATIPlayerController* Player : ActivePlayers) {
+			APawn* Pawn = Player->GetPawn();
 			if (!Pawn || !Pawn->IsA(DinoClass)) continue;// Make sure it's actually dino, not a fucking damn human
 
-			IsleStructs::ATIDinosaurBase* Dino = static_cast<IsleStructs::ATIDinosaurBase*>(Pawn);
-			int32 DinoID = *DinoIDProp->ContainerPtrToValuePtr<int32>(Dino);
-			IsleStructs::FEligiblePrimeElder& NewData = *DinoPrimeDataProp->ContainerPtrToValuePtr<IsleStructs::FEligiblePrimeElder>(Dino);
+			ATIDinosaurBase* Dino = static_cast<ATIDinosaurBase*>(Pawn);
+			int32 DinoID = Dino->GetID();
+			FEligiblePrimeElder& NewData = Dino->GetEligiblePrimeElderData();
 			if (!Cached.Contains(DinoID)) {
 				NewCached.Add(DinoID, NewData);
 				continue;
 			}
 
-			IsleStructs::FEligiblePrimeElder OldData = *Cached.Find(DinoID);
+			FEligiblePrimeElder OldData = *Cached.Find(DinoID);
 			NewCached.Add(DinoID, OldData);
-			if (!std::memcmp(&OldData, &NewData, sizeof(IsleStructs::FEligiblePrimeElder))) continue;
+			if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
 
 			NotifyPrimeConditionDiff(Dino, Player, OldData, NewData);
 			NewCached.Add(DinoID, NewData);
@@ -102,16 +85,6 @@ namespace PrimeStatusComponent {
 	}
 
 	auto Initialize() -> void {
-		GameModeBaseClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIGameModeBase"));
-		GameModeAllPlayers = GameModeBaseClass->GetPropertyByNameInChain(STR("AllPlayerControllers"));
-
-		PlayerControllerBaseClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIPlayerController"));
-		PlayerControllerPawn = PlayerControllerBaseClass->GetPropertyByNameInChain(STR("Pawn"));// Dinos/Humans/Spectator
-
 		DinoClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIDinosaurBase"));
-		DinoPrimeDataProp = DinoClass->GetPropertyByNameInChain(STR("EligiblePrimeElderData"));
-		DinoIDProp = DinoClass->GetPropertyByNameInChain(STR("ID"));
-
-		ClientNotifyFunc = UObjectGlobals::StaticFindObject<UFunction*>(nullptr, nullptr, STR("/Script/TheIsle.TIPlayerController:ClientShowNotification"));
 	}
 }
