@@ -1,6 +1,6 @@
-#include "FText.hpp"
 #include <SDKGenerator/UEHeaderGenerator.hpp>
 
+#include <Unreal/FText.hpp>
 #include <Unreal/AActor.hpp>
 #include <Unreal/UObject.hpp>
 #include <Unreal/UObjectArray.hpp>
@@ -15,7 +15,7 @@ namespace PrimeStatusComponent {
 
 	struct ConditionField {
 		bool FEligiblePrimeElder::* Member;
-		const wchar_t* Name;// StringType maybe, I made it when didn't realized I can use it.
+		const RC::StringType Name;// StringType maybe, I made it when didn't realized I can use it.
 	};
 
 	static UClass* DinoClass{};
@@ -39,7 +39,7 @@ namespace PrimeStatusComponent {
 		using namespace RC::Unreal;
 
 		int CompletedTasks{0};
-		StringType ChangeAnnounce;
+		RC::StringType ChangeAnnounce;
 		for (const auto& Field : Fields) {
 			bool OldVal = Old.*Field.Member;
 			bool NewVal = New.*Field.Member;
@@ -48,7 +48,7 @@ namespace PrimeStatusComponent {
 			ChangeAnnounce += fmt::format(STR("[{}: {}]"), Field.Name, NewVal);
 		}
 
-		StringType MessageStr = fmt::format(STR("Prime Tasks [{}/5] {}"), CompletedTasks, ChangeAnnounce);
+		RC::StringType MessageStr = fmt::format(STR("Prime Tasks [{}/5] {}"), CompletedTasks, ChangeAnnounce);
 		Player->ClientShowNotification(FText(MessageStr));
 	}
 

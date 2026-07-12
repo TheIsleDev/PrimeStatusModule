@@ -1,5 +1,3 @@
-#include <string>
-
 #include <Mod/CppUserModBase.hpp>
 
 #include "handler.cpp"
