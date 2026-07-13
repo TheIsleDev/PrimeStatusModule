@@ -10,7 +10,7 @@ private:
 public:
 	PrimeStatus() : CppUserModBase() {
 		ModName = STR("PrimeStatus");
-		ModVersion = STR("1.0");
+		ModVersion = STR("1.0.1");
 		ModDescription = STR("Tell players when they do something to prime tasks related");
 		ModAuthors = STR("Shiza");
 	}
