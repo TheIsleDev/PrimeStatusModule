@@ -1,0 +1,1 @@
+This mod for "The Isle Evrima" helps players to keep track of their prime status and know for sure if they completed or failed requirements.
