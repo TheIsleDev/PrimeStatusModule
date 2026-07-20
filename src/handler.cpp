@@ -13,12 +13,16 @@
 namespace PrimeStatusComponent {
 	using namespace RC::Unreal;
 
-	struct ConditionField {
-		bool FEligiblePrimeElder::* Member;
-		const RC::StringType Name;// StringType maybe, I made it when didn't realized I can use it.
+	struct FEligiblePrimeElderHolder {
+		int32 DinoID;
+		FEligiblePrimeElder Holder;
 	};
 
-	static UClass* DinoClass{};
+	struct ConditionField {
+		bool FEligiblePrimeElder::* Member;
+		const RC::StringType Name;
+	};
+
 	static ATIGameModeBase* GameMode{};
 
 	static const ConditionField Fields[] = {
@@ -52,7 +56,7 @@ namespace PrimeStatusComponent {
 		Player->ClientShowNotification(FText(MessageStr));
 	}
 
-	static TMap<int32, FEligiblePrimeElder> Cached;
+	static TMap<FString, FEligiblePrimeElderHolder> Cached;
 
 	auto Fire() -> void {
 		if (!GameMode) {
@@ -60,31 +64,31 @@ namespace PrimeStatusComponent {
 			if(!GameMode) return;
 		}
 
-		TMap<int32, FEligiblePrimeElder> NewCached;
+		TMap<FString, FEligiblePrimeElderHolder> NewCached;
 		TSet<ATIPlayerController*> ActivePlayers = GameMode->GetAllPlayerControllers();
 		for (ATIPlayerController* Player : ActivePlayers) {
 			APawn* Pawn = Player->GetPawn();
-			if (!Pawn || !Pawn->IsA(DinoClass)) continue;// Make sure it's actually dino, not a fucking damn human
+			if (!Pawn || !Pawn->IsA(ATIDinosaurBase::StaticClass())) continue;
 
+			FString SteamID = Player->GetSteamId();
 			ATIDinosaurBase* Dino = static_cast<ATIDinosaurBase*>(Pawn);
 			int32 DinoID = Dino->GetID();
 			FEligiblePrimeElder& NewData = Dino->GetEligiblePrimeElderData();
-			if (!Cached.Contains(DinoID)) {
-				NewCached.Add(DinoID, NewData);
+			FEligiblePrimeElderHolder* OldData = Cached.Find(SteamID);
+			if (!OldData || OldData->DinoID != DinoID) {
+				NewCached.Add(SteamID, {DinoID, NewData});
 				continue;
 			}
 
-			FEligiblePrimeElder OldData = *Cached.Find(DinoID);
-			NewCached.Add(DinoID, OldData);
-			if (!std::memcmp(&OldData, &NewData, sizeof(FEligiblePrimeElder))) continue;
+			NewCached.Add(SteamID, *OldData);
+			if (!std::memcmp(&OldData->Holder, &NewData, sizeof(FEligiblePrimeElder))) continue;
 
-			NotifyPrimeConditionDiff(Dino, Player, OldData, NewData);
-			NewCached.Add(DinoID, NewData);
+			NotifyPrimeConditionDiff(Dino, Player, OldData->Holder, NewData);
+			NewCached.Add(SteamID, {DinoID, NewData});
 		}
 		Cached = NewCached;
 	}
 
 	auto Initialize() -> void {
-		DinoClass = UObjectGlobals::StaticFindObject<UClass*>(nullptr, nullptr, STR("/Script/TheIsle.TIDinosaurBase"));
 	}
 }
