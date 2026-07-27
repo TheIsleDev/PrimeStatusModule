@@ -39,7 +39,7 @@ namespace PrimeStatusComponent {
 		{&FEligiblePrimeElder::bIsEligiblePrime, STR("Prime Eligibility")},
 	};
 
-	auto NotifyPrimeConditionDiff(ATIDinosaurBase* Dino, ATIPlayerController* Player, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
+	auto NotifyPrimeConditionDiff(ATIPlayerController* Player, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) -> void {
 		using namespace RC::Unreal;
 
 		int CompletedTasks{0};
@@ -83,7 +83,7 @@ namespace PrimeStatusComponent {
 			NewCached.Add(SteamID, *OldData);
 			if (!std::memcmp(&OldData->Holder, &NewData, sizeof(FEligiblePrimeElder))) continue;
 
-			NotifyPrimeConditionDiff(Dino, Player, OldData->Holder, NewData);
+			NotifyPrimeConditionDiff(Player, OldData->Holder, NewData);
 			NewCached.Add(SteamID, {DinoID, NewData});
 		}
 		Cached = NewCached;
