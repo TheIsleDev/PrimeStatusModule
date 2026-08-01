@@ -46,6 +46,7 @@ void StatusSubsystem::NotifyPrimeConditionDiff(ATIPlayerController* Player, cons
 		ChangeAnnounce += fmt::format(STR("[{}: {}]"), Field.Name, NewVal);
 	}
 
+	// Прикольная натификация слева у игрока
 	RC::StringType MessageStr = fmt::format(STR("Prime Tasks [{}/5] {}"), CompletedTasks, ChangeAnnounce);
 	Player->ClientShowNotification(FText(MessageStr));
 }
@@ -57,6 +58,7 @@ void StatusSubsystem::Tick(float DeltaSeconds, bool bIdleMode) {
 	static ATIGameModeBase* GameMode = static_cast<ATIGameModeBase*>(UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C")));;
 
     CachedPrimeData NewCached;
+	// Проходим только по активным игрокам, мз минусов если чел проебет таск пока вылетевший то не регнет
     TSet<ATIPlayerController*> ActivePlayers = GameMode->AllPlayerControllers();
     for (ATIPlayerController* Player : ActivePlayers) {
         APawn* Pawn = Player->Pawn();
@@ -73,8 +75,10 @@ void StatusSubsystem::Tick(float DeltaSeconds, bool bIdleMode) {
         }
 
         NewCached.Add(SteamID, *OldData);
+		// Сверяем байтики, так быстрее
         if (!std::memcmp(&OldData->Holder, &NewData, sizeof(FEligiblePrimeElder))) continue;
 
+		// Байтики не совпали, оповещаем тогда
         NotifyPrimeConditionDiff(Player, OldData->Holder, NewData);
         NewCached.Add(SteamID, {DinoID, NewData});
     }
