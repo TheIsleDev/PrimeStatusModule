@@ -4,7 +4,7 @@
 #include <Subsystem.hpp>
 
 
-const std::array<ConditionField, 11> StatusSubsystem::ConditionFields{{
+const ConditionField StatusSubsystem::ConditionFields[] = {
 	{&FEligiblePrimeElder::bPrimeCondition1, STR("Visit a Sanctuary")},
 	{&FEligiblePrimeElder::bPrimeCondition2, STR("Get Nested In")},
 	{&FEligiblePrimeElder::bPrimeCondition3, STR("Get Perfect Diet")},
@@ -16,7 +16,7 @@ const std::array<ConditionField, 11> StatusSubsystem::ConditionFields{{
 	{&FEligiblePrimeElder::bPrimeCondition9, STR("Raise children to subadult")},
 	{&FEligiblePrimeElder::bPrimeCondition10, STR("Be a Hypsi, Troodon, Beipi, Dryo or Deino.")},
 	{&FEligiblePrimeElder::bIsEligiblePrime, STR("Prime Eligibility")},
-}};
+};
 
 StatusSubsystem::StatusSubsystem() {
 	// Мы хотим что бы эта хуйня тикала только когда игра тикает, и не на оборот...
@@ -38,7 +38,7 @@ void StatusSubsystem::NotifyPrimeConditionDiff(ATIPlayerController* Player, cons
 
 	int CompletedTasks{0};
 	RC::StringType ChangeAnnounce;
-	for (const auto& Field : ConditionFields) {
+	for (const ConditionField& Field : ConditionFields) {
 		bool OldVal = Old.*Field.Member;
 		bool NewVal = New.*Field.Member;
 		if (NewVal) CompletedTasks++;
@@ -54,7 +54,7 @@ void StatusSubsystem::Tick(float DeltaSeconds, bool bIdleMode) {
 	// Нахуя тикать если ничего не изменилось?
 	if (bIdleMode) return;
 
-	static const ATIGameModeBase* GameMode = static_cast<ATIGameModeBase*>(UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C")));;
+	static ATIGameModeBase* GameMode = static_cast<ATIGameModeBase*>(UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C")));;
 
     CachedPrimeData NewCached;
     TSet<ATIPlayerController*> ActivePlayers = GameMode->AllPlayerControllers();

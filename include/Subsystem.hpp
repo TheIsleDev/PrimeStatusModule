@@ -25,7 +25,7 @@ private:
 	int TicksFired = 0;
 	static constexpr int TickRate{10};
 
-	static const std::array<ConditionField, 11> ConditionFields;
+	static const ConditionField ConditionFields[];
 
 	Hook::GlobalCallbackId FireCallBackID{};
 
