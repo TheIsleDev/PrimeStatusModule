@@ -1,6 +1,15 @@
 
 #pragma once
 
+#include <Unreal/FString.hpp>
+#include <Unreal/Hooks/Hooks.hpp>
+#include <Unreal/FText.hpp>
+#include <Unreal/AActor.hpp>
+#include <Unreal/UObject.hpp>
+#include <Unreal/UObjectArray.hpp>
+#include <Unreal/UObjectGlobals.hpp>
+#include <Unreal/CoreUObject/UObject/UnrealType.hpp>
+#include <Unreal/Core/Containers/ContainerAllocationPolicies.hpp>
 #include <TheIsle/_simple_structs.hpp>
 #include <TheIsle/ATIPlayerController.hpp>
 #include <TheIsle/ATIGameModeBase.hpp>

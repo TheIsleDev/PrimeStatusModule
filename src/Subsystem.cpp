@@ -1,6 +1,5 @@
 
 #include <TheIsle/ATIDinosaurBase.hpp>
-
 #include <Subsystem.hpp>
 
 
@@ -34,8 +33,6 @@ StatusSubsystem::~StatusSubsystem() {
 
 
 void StatusSubsystem::NotifyPrimeConditionDiff(ATIPlayerController* Player, const FEligiblePrimeElder& Old, const FEligiblePrimeElder& New) {
-	using namespace RC::Unreal;
-
 	int CompletedTasks{0};
 	RC::StringType ChangeAnnounce;
 	for (const ConditionField& Field : ConditionFields) {
