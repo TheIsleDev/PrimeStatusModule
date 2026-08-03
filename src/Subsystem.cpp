@@ -23,7 +23,7 @@ StatusSubsystem::StatusSubsystem() {
 		[this](Hook::TCallbackIterationData<void>& info, UEngine* Context, float DeltaSeconds, bool bIdleMode) {
 			Tick(DeltaSeconds, bIdleMode);
 		}
-		, {false, true, STR("StatusSystem"), STR("TickingStatus")}
+		, {false, true, STR("PrimeStatus"), STR("TickingStatus")}
 	);
 }
 
@@ -51,6 +51,9 @@ void StatusSubsystem::NotifyPrimeConditionDiff(ATIPlayerController* Player, cons
 void StatusSubsystem::Tick(float DeltaSeconds, bool bIdleMode) {
 	// Нахуя тикать если ничего не изменилось?
 	if (bIdleMode) return;
+
+	if (++TicksFired < TickRate) return;
+	TicksFired = 0;
 
 	static ATIGameModeBase* GameMode = static_cast<ATIGameModeBase*>(UObjectGlobals::FindFirstOf(STR("BP_SurvivalGameMode_C")));;
 

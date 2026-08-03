@@ -32,7 +32,7 @@ class StatusSubsystem {
 private:
 	/// How often it fires
 	int TicksFired = 0;
-	static constexpr int TickRate{10};
+	static constexpr int TickRate{30};
 
 	static const ConditionField ConditionFields[];
 

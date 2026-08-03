@@ -16,6 +16,7 @@ PrimeStatusSystem::PrimeStatusSystem() {
 }
 
 PrimeStatusSystem::~PrimeStatusSystem() {
+	delete TickingStatus;
 }
 
 
