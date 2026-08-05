@@ -14,7 +14,7 @@ private:
 	PrimeStatusConfig Config{};
 
 public:
-	StatusSubsystem* TickingStatus{};
+	std::unique_ptr<StatusSubsystem> TickingStatus{};
 
     PrimeStatusSystem();
 	~PrimeStatusSystem() override;

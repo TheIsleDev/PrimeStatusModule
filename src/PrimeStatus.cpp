@@ -16,13 +16,11 @@ PrimeStatusSystem::PrimeStatusSystem() {
 }
 
 PrimeStatusSystem::~PrimeStatusSystem() {
-	delete TickingStatus;
 }
 
 
 void PrimeStatusSystem::on_unreal_init() {
-	static StatusSubsystem Ticker{};
-	TickingStatus = &Ticker;
+	TickingStatus = std::make_unique<StatusSubsystem>();
 }
 
 
