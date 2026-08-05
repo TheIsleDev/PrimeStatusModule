@@ -36,7 +36,7 @@ private:
 
 	static const ConditionField ConditionFields[];
 
-	Hook::GlobalCallbackId FireCallBackID{};
+	Hook::GlobalCallbackId FireCallBackID;
 
 	using CachedPrimeData = TMap<FString, FEligiblePrimeElderHolder>;
     CachedPrimeData Cached;

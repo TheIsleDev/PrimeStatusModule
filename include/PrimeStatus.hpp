@@ -11,10 +11,10 @@ struct PrimeStatusConfig {
 
 class PrimeStatusSystem : public RC::CppUserModBase {
 private:
-	PrimeStatusConfig Config{};
+	PrimeStatusConfig Config;
 
 public:
-	std::unique_ptr<StatusSubsystem> TickingStatus{};
+	std::unique_ptr<StatusSubsystem> TickingStatus;
 
     PrimeStatusSystem();
 	~PrimeStatusSystem() override;
